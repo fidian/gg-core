@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Load the manifest file by sourcing it.
+#
+# Returns 1 when there is no file, otherwise returns the return code generated
+# by the manifest script.
+manifestLoad() {
+    local manifest
+
+    manifest="$metaDir/manifest/manifest"
+
+    if [[ ! -f "$manifest" ]]; then
+        cat <<EOF
+Manifest file is missing.
+
+Expected one at $manifest
+EOF
+        return 1
+    fi
+
+    . "$manifest"
+}

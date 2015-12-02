@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Call the various help functions for each command in order to assemble
+# the help text.
+commandHelp() {
+    local command
+
+    for command in $(set | grep "^commandList_" | cut -d = -f 1 | sort); do
+        "${!command}Help"
+    done
+}

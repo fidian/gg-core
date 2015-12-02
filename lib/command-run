@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Run a command, passing along the arguments.  When the command does not exist,
+# this will report an error.
+#
+# $1    - Command to run.
+# $2-$@ - Additional arguments are passed to the command.
+#
+# Returns 1 when the command is not found.  Otherwise it returns the executed
+# command's return code.
+commandRun() {
+    local command
+
+    command=commandList_$1
+
+    if [[ -z "${!command-}" ]]; then
+        cat >&2 <<EOF
+Sorry, "$1" is not a known command.
+
+See: $programName help
+EOF
+        return 1
+    fi
+
+    shift
+    "${!command}" "$@"
+}

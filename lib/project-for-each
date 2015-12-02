@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Iterate over each defined project and call a command.
+#
+# $1 - The command to call.
+#
+# The command is called with the path and source url, as in
+#
+#   theCommandToCall "some/path" "git@github.com:some/url"
+#
+# Stops at the first error and returns the error code.  When no errors are
+# encountered, this returns 0.
+projectForEach() {
+    local i
+
+    i=0
+    while [[ $i -lt ${#projectRepos[@]} ]]; do
+        "$1" "${projectPaths[$i]}" "${projectRepos[$i]}"
+        i=$((i + 1))
+    done
+}

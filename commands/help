@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+commandAdd help cmdHelp
+
+cmdHelpHelp() {
+    cat <<EOF
+   help            Displays this help message.
+EOF
+}

@@ -1,3 +1,102 @@
 #!/usr/bin/env bash
 
-echo sync omg
+commandAdd sync cmdSync
+
+cmdSyncHelp() {
+    cat <<EOF
+   sync            Synchronize local repositories with remotes.  This
+                   attempts to rebase and falls back to pull/push.
+EOF
+}
+
+
+# Synchronize projects
+cmdSync() {
+    projectForEach cmdSyncEach
+}
+
+
+# Called for each project that should be synchronized.
+#
+# If the folder does not exist, this will clone.  After that it always
+# synchronizes.
+#
+# $1 - Location for repository.
+# $2 - Url for cloning.
+#
+# Returns true on success, or cmdSyncSynchronize return codes.
+cmdSyncEach() {
+    if [[ ! -d "$1" ]]; then
+        status "Cloning $2 into $1"
+        git clone "$2" "$1"
+        cmdSyncSynchronize "$1"
+        return 0
+    fi
+
+    status "Synchronizing $1"
+    cmdSyncSynchronize "$1"
+}
+
+
+# Synchronize a git repository.
+#
+# First runs a fetch to get the history from the remote repository.  After
+# that it will attempt to fast forward, rebase, or merge (in that order).
+# Finally, the submodules would be updated.
+#
+# $1 - Location of the repository.
+#
+# Returns true (0) on success, 1 if there is no remote, 2 if there are
+# problems synchronizing such as a manual merge.
+cmdSyncSynchronize() {
+    (
+        local head ref remote remoteBranch remoteRef
+
+        cd "$1"
+
+        ref=$(git symbolic-ref HEAD)
+        head=${ref#refs/heads/}
+        remote=$(git config branch.$head.remote || echo "")
+
+        if [[ -z "$remote" ]]; then
+            cat <<EOF
+No remote is set for this branch.  Perhaps you should push it first?
+EOF
+            return 1
+        fi
+
+        remoteRef=$(git config branch.$head.merge)
+        remoteBranch=${remoteRef#refs/heads/}
+
+        # Update history
+        git fetch
+        
+        # Attempt to just pull when there's no changes
+        if [[ "$(git merge-base $remote/$remoteBranch HEAD)" == "$(git rev-parse HEAD)" ]]; then
+            git merge --ff $remote/$remoteBranch
+            git submodule update --init --recursive
+            return 0
+        fi
+
+        if git rebase $remote/$remoteBranch; then
+            # Rebase successful
+            git push
+            git submodule update --init --recursive
+            return 0
+        fi
+
+        # Fall back to a merge and possibly have merge conflicts
+        echo "Rebase failed.  Falling back to a standard merge."
+        git rebase --abort || git checkout $head
+
+        if git merge $remote/$remoteBranch; then
+            git push
+            git submodule update --init --recursive
+            return 0
+        fi
+
+        echo ""
+        echo "Resolve merge conflicts, commit, then sync again."
+        return 2
+    )
+}
