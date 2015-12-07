@@ -6,7 +6,7 @@
 manifestLoad() {
     local manifest
 
-    manifest="$metaDir/manifest/manifest"
+    manifest="$metaDir/manifest/manifest.ini"
 
     if [[ ! -f "$manifest" ]]; then
         cat <<EOF
@@ -17,5 +17,5 @@ EOF
         return 1
     fi
 
-    . "$manifest"
+    ini-parse "gg_manifest" "$(cat "$manifest")"
 }

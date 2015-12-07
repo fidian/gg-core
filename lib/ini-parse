@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# TEMPORARY FIX UNTIL LIBRARIES CAN BE USED FROM THIRD PARTY REPOSITORIES
+
+# Hex encodes a string and writes it to stdout.
+#
+# Parameters:
+#     $1: The string to encode.
+encode-string() {
+    local C OUT
+
+    IN="$1"
+    OUT=
+
+    while [[ "${#IN}" -gt 0 ]]; do
+        C=${IN:0:1}
+        printf -v C "%x" "'$C"
+        OUT="$OUT$C"
+        IN="${IN:1}"
+    done
+
+    echo "$OUT"
+}
+
+
+# Parses any INI file into the environment.  Variables are set like this:
+#
+#     PREFIX=(array of section names)
+#     PREFIX__SECTION=true
+#     PREFIX__SECTION__KEY=value
+#
+# The SECTION and KEY portions are hex encoded to ensure they are valid
+# variable names.
+#
+# Parameters:
+#     $1: Prefix for variables.
+#     $2: INI file contents
+ini-parse() {
+    local KEY OLD_IFS PREFIX SECTION VALUE
+
+    OLD_IFS=$IFS
+    IFS="\n"
+    SECTION=
+    PREFIX="$1"
+
+    eval "${PREFIX}=()"
+
+    while read LINE; do
+        LINE=$(trim "$LINE")
+
+        # Eliminate comments
+        LINE=${LINE##\#*}
+        LINE=${LINE##;*}
+
+        if [[ "${LINE:0:1}" == '[' ]] && [[ "${LINE:${#LINE}-1}" == "]" ]]; then
+            LINE=${LINE:1:${#LINE}-2}
+            SECTION=$(trim "$LINE")
+            eval "$(ini-key-name "$PREFIX" "$SECTION")=()"
+            eval "${PREFIX}[\${#${PREFIX}[@]}]=\"\$SECTION\""
+        elif [[ -n "$LINE" ]]; then
+            IFS="="
+            read KEY VALUE <<< "$LINE"
+            IFS="\n"
+            KEY=$(trim "$KEY")
+
+            if [[ ! -z "$KEY" ]]; then
+                VALUE=$(trim "$VALUE")
+                eval "$(ini-key-name "$PREFIX" "$SECTION")[\${#$(ini-key-name "$PREFIX" "$SECTION")[@]}]=\"\$KEY\""
+                eval "$(ini-key-name "$PREFIX" "$SECTION" "$KEY")=\$VALUE"
+            fi
+        fi
+    done <<< "$2"
+
+    IFS=$OLD_IFS
+}
+
+ini-key-name() {
+    local name
+
+    name="$1"
+
+    if [[ -n "${2-}" ]] || [[ -n "${3-}" ]]; then
+        name+="__$(encode-string "$2")"
+    fi
+
+    if [[ -n "${3-}" ]]; then
+        name+="__$(encode-string "$3")"
+    fi
+
+    echo "$name"
+}
+
+# Trims a string.  Writes the result to stdout.
+#
+# Parameters:
+#     $1: The string to trim
+trim() {
+    local OLD STR
+
+    STR=$1
+    OLD=
+
+    while [[ "$STR" != "$OLD" ]]; do
+        OLD=$STR
+        STR=${STR# }
+        STR=${STR#$'\n'}
+        STR=${STR#$'\r'}
+        STR=${STR#$'\t'}
+        STR=${STR% }
+        STR=${STR%$'\n'}
+        STR=${STR%$'\r'}
+        STR=${STR%$'\t'}
+    done
+
+    echo "$STR"
+}

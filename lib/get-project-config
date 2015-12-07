@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+getProjectConfig() {
+    local name
+
+    name=$(ini-key-name "gg_manifest" "$1" "$2")
+
+    if [[ -z "${!name-}" ]]; then
+        name=$(ini-key-name "gg_manifest" "default" "$2")
+    fi
+}

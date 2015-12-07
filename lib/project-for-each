@@ -10,11 +10,11 @@
 # Stops at the first error and returns the error code.  When no errors are
 # encountered, this returns 0.
 projectForEach() {
-    local i
+    local path pathVarName project remote remoteVarName
 
-    i=0
-    while [[ $i -lt ${#projectRepos[@]} ]]; do
-        "$1" "${projectPaths[$i]}" "${projectRepos[$i]}"
-        i=$((i + 1))
+    for project in "${gg_manifest[@]}"; do
+        if [[ "$project" != "default" ]]; then
+            "$1" "$project"
+        fi
     done
 }

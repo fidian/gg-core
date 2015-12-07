@@ -21,20 +21,40 @@ cmdSync() {
 # If the folder does not exist, this will clone.  After that it always
 # synchronizes.
 #
-# $1 - Location for repository.
-# $2 - Url for cloning.
+# $1 - Project identifier.
 #
-# Returns true on success, or cmdSyncSynchronize return codes.
+# Returns true on success, no path, or no remote (none of those are errors
+# that should skip all future work).  Otherwise this returns
+# cmdSyncSynchronize return codes.
 cmdSyncEach() {
-    if [[ ! -d "$1" ]]; then
-        status "Cloning $2 into $1"
-        git clone "$2" "$1"
-        cmdSyncSynchronize "$1"
+    local path remote
+
+    echo "*** $1"
+    remote="$(getProjectConfig "$1" remote)"
+    path="$(getProjectConfig "$1" path)"
+
+    if [[ -z "$remote" ]]; then
+        echo "No remote set for $1"
+
+        return 0
+    fi
+
+    if [[ -z "$path" ]]; then
+        echo "No path set for $1"
+
+        return 0
+    fi
+
+    if [[ ! -d "$path" ]]; then
+        status "Cloning $1"
+        git clone "$remote" "$path"
+        cmdSyncSynchronize "$path"
+
         return 0
     fi
 
     status "Synchronizing $1"
-    cmdSyncSynchronize "$1"
+    cmdSyncSynchronize "$path"
 }
 
 
@@ -44,19 +64,17 @@ cmdSyncEach() {
 # that it will attempt to fast forward, rebase, or merge (in that order).
 # Finally, the submodules would be updated.
 #
-# $1 - Location of the repository.
+# $1 - Project name from the config
 #
-# Returns true (0) on success, 1 if there is no remote, 2 if there are
-# problems synchronizing such as a manual merge.
+# Returns true (0) on success, or non-zero with errors.
 cmdSyncSynchronize() {
     (
         local head ref remote remoteBranch remoteRef
 
         cd "$1"
-
         ref=$(git symbolic-ref HEAD)
         head=${ref#refs/heads/}
-        remote=$(git config branch.$head.remote || echo "")
+        remote=$(git config "branch.$head.remote" || echo "")
 
         if [[ -z "$remote" ]]; then
             cat <<EOF
@@ -65,38 +83,42 @@ EOF
             return 1
         fi
 
-        remoteRef=$(git config branch.$head.merge)
+        remoteRef=$(git config "branch.$head.merge")
         remoteBranch=${remoteRef#refs/heads/}
 
         # Update history
         git fetch
         
         # Attempt to just pull when there's no changes
-        if [[ "$(git merge-base $remote/$remoteBranch HEAD)" == "$(git rev-parse HEAD)" ]]; then
-            git merge --ff $remote/$remoteBranch
+        if [[ "$(git merge-base "$remote/$remoteBranch" HEAD)" == "$(git rev-parse HEAD)" ]]; then
+            git merge --ff "$remote/$remoteBranch"
             git submodule update --init --recursive
+
             return 0
         fi
 
-        if git rebase $remote/$remoteBranch; then
+        if git rebase "$remote/$remoteBranch"; then
             # Rebase successful
             git push
             git submodule update --init --recursive
+
             return 0
         fi
 
         # Fall back to a merge and possibly have merge conflicts
         echo "Rebase failed.  Falling back to a standard merge."
-        git rebase --abort || git checkout $head
+        git rebase --abort || git checkout "$head"
 
-        if git merge $remote/$remoteBranch; then
+        if git merge "$remote/$remoteBranch"; then
             git push
             git submodule update --init --recursive
+
             return 0
         fi
 
         echo ""
         echo "Resolve merge conflicts, commit, then sync again."
+
         return 2
     )
 }
