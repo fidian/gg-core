@@ -7,4 +7,6 @@ getProjectConfig() {
     if [[ -z "${!name-}" ]]; then
         name=$(ini-key-name "gg_manifest" "default" "$2")
     fi
+
+    echo "${!name-}"
 }
