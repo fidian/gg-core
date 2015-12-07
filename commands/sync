@@ -45,7 +45,7 @@ cmdSyncEach() {
     fi
 
     if [[ ! -d "$path" ]]; then
-        status "Cloning $1 $remote $path"
+        status "Cloning $1 into $path"
         git clone "$remote" "$path"
         cmdSyncSynchronize "$path"
 
