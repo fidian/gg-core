@@ -29,14 +29,7 @@ cmdSync() {
 cmdSyncEach() {
     local path remote
 
-    remote="$(getProjectConfig "$1" remote)"
     path="$(getProjectConfig "$1" path)"
-
-    if [[ -z "$remote" ]]; then
-        status "No remote set for $1"
-
-        return 0
-    fi
 
     if [[ -z "$path" ]]; then
         status "No path set for $1"
@@ -45,6 +38,14 @@ cmdSyncEach() {
     fi
 
     if [[ ! -d "$path" ]]; then
+        remote="$(getProjectConfig "$1" remote)"
+
+        if [[ -z "$remote" ]]; then
+            status "No remote set for $1"
+
+            return 0
+        fi
+
         status "Cloning $1 into $path"
         git clone "$remote" "$path"
         cmdSyncSynchronize "$path"
