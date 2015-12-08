@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+minVersion=2
+
+if [[ "$programVersion" -lt "$minVersion" ]]; then
+    cat >&2 <<EOF
+$programName requires version $minVersion to work.
+
+Sorry about this hassle, but you need to upgrade your $programName loader.
+You may download it again from the project website:
+
+https://github.com/fidian/gg
+EOF
+    exit 1
+fi
