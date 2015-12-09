@@ -32,6 +32,9 @@ encode-string() {
 # The SECTION and KEY portions are hex encoded to ensure they are valid
 # variable names.
 #
+# If you have a solution to remove `eval` from this code, I would love to
+# hear from you.
+#
 # Parameters:
 #     $1: Prefix for variables.
 #     $2: INI file contents

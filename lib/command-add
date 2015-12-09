@@ -5,10 +5,7 @@
 # $1 - Name of command a user can type in.
 # $2 - Function or command to call.
 #
-# Yes, this does use eval.  I'd be happy to accept pull requests that solve
-# this problem.
-#
 # Returns nothing.
 commandAdd() {
-    eval "commandList_$1=$2"
+    printf -v "commandList_$1" "%s" "$2"
 }
