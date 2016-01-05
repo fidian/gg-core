@@ -37,7 +37,7 @@ cmdStatusEach() {
         return 0
     fi
 
-    statusResult=$(cd "$1" ; git status)
+    statusResult=$(cd "$path" ; git status)
 
     if echo "$statusResult" | grep -q "^nothing to commit, working directory clean$"; then
         status "$1: clean"
