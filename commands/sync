@@ -63,17 +63,23 @@ cmdSyncEach() {
 # Attempts to be intelligent about this and will only push if there are
 # commits locally that do not exist in the remote.
 #
+# $1 - Remote's name and branch (remote/remote-branch).
+#
 # Returns nothing.
 cmdSyncPush() {
-    if ! git log --oneline '@{push}..' > /dev/null 2>&1; then
-        # No support for @{push} tag.  Falling back to a blind push.
-        git push
-    else
-        if [[ -z "$(git log --oneline '@{push}..')" ]]; then
-            status "No commits to push"
-        else
+    # Test to see if '@{push}' is supported
+    if git log --oneline '@{push}..' > /dev/null 2>&1; then
+        # Supported.  Now check if there are commits
+        if [[ -n "$(git log --oneline '@{push}..')" ]]; then
             git push
         fi
+
+        return 0
+    fi
+
+    # Fall back to using the remote name and branch
+    if [[ -n "$(git log --oneline "$1..")" ]]; then
+        git push
     fi
 }
 
@@ -119,7 +125,7 @@ EOF
 
         if git rebase "$remote/$remoteBranch"; then
             # Rebase successful
-            cmdSyncPush
+            cmdSyncPush "$remote/$remoteBranch"
             git submodule update --init --recursive
 
             return 0
@@ -130,7 +136,7 @@ EOF
         git rebase --abort || git checkout "$head"
 
         if git merge "$remote/$remoteBranch"; then
-            cmdSyncPush
+            cmdSyncPush "$remote/$remoteBranch"
             git submodule update --init --recursive
 
             return 0
