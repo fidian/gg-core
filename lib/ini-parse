@@ -42,7 +42,7 @@ ini-parse() {
     local KEY OLD_IFS PREFIX SECTION VALUE
 
     OLD_IFS=$IFS
-    IFS="\n"
+    IFS=$'\n'
     SECTION=
     PREFIX="$1"
 
@@ -63,7 +63,7 @@ ini-parse() {
         elif [[ -n "$LINE" ]]; then
             IFS="="
             read KEY VALUE <<< "$LINE"
-            IFS="\n"
+            IFS=$'\n'
             KEY=$(trim "$KEY")
 
             if [[ ! -z "$KEY" ]]; then
