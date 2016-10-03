@@ -39,7 +39,7 @@ cmdStatusEach() {
 
     statusResult=$(cd "$path" ; git status)
 
-    if echo "$statusResult" | grep -q "^nothing to commit, working tree clean$"; then
+    if echo "$statusResult" | egrep -q "^nothing to commit, working (tree|directory) clean$"; then
         status "$1: clean"
     else
         status "$1: dirty"
