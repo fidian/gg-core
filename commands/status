@@ -39,7 +39,9 @@ cmdStatusEach() {
 
     statusResult=$(cd "$path" ; git status)
 
-    if echo "$statusResult" | grep -q "^nothing to commit, working directory clean$"; then
+    # git 2.9 and 2.10:  nothing to commit, working tree clean
+    # git 1.7:  nothing to commit, working directory clean
+    if echo "$statusResult" | grep -q "^nothing to commit, working .* clean$"; then
         status "$1: clean"
     else
         status "$1: dirty"
