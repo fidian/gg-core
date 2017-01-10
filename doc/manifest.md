@@ -10,6 +10,7 @@ A manifest repository contains a single file that tells [gg] what projects to cl
     [second-project]
     remote=git@github.com:example/second-project.git
     path=second-place
+    branch=develop
 
     [config]
     remote=git@github.com:example/config.git
@@ -20,8 +21,9 @@ If this were a useful file and someone ran `gg sync` in an initialized directory
     /home/user/initialized-directory/.gg/gg-core    # Most of the gg commands
     /home/user/initialized-directory/.gg/manifest   # Repo with the above file
     /home/user/initialized-directory/project-name   # The first project
-    /home/user/initialized-directory/second-place   # The second project
+    /home/user/initialized-directory/second-place   # The second project, develop branch
     /home/user/initialized-directory/data/config    # The config project
+
 
 INI Format and Keys
 -------------------
@@ -31,7 +33,7 @@ The format is an INI file so that additional properties can be associated with e
 Comments are supported with either or `#` or `;` as the first character on the line.
 
 
-### remote
+### `remote`
 
 This lists the remote URL to use for the initial git clone.
 
@@ -42,7 +44,7 @@ Examples:
     path=project/
 
 
-### path
+### `path`
 
 The path is the destination directory where the repository should be checked out.
 
@@ -53,6 +55,12 @@ Examples:
     remote=http://github.com/example/apache-config.git
     path=config/apache/
 
+
+### `branch`
+
+This setting is optional.  When specified, this affects the branch that is initially cloned.  Also, when the current branch of the repository doesn't match the branch listed in the manifest, `gg status` will report it.
+
+When not specified, the default branch is cloned from the repository.  Also, `gg status` will never report that a repository is off the normal branch.
 
 
 [gg]: https://github.com/fidian/gg

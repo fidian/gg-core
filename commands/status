@@ -21,9 +21,10 @@ cmdStatus() {
 #
 # Always returns true.  Can never fail.
 cmdStatusEach() {
-    local path statusResult
+    local actualBranch desiredBranch path statusResult
 
     path="$(getProjectConfig "$1" path)"
+    desiredBranch="$(getProjectConfig "$1" branch)"
 
     if [[ -z "$path" ]]; then
         status "$1: No path set."
@@ -37,7 +38,7 @@ cmdStatusEach() {
         return 0
     fi
 
-    statusResult=$(cd "$path" ; git status)
+    statusResult=$(cd "$path"; git status)
 
     # git 2.9 and 2.10:  nothing to commit, working tree clean
     # git 1.7:  nothing to commit, working directory clean
@@ -46,5 +47,13 @@ cmdStatusEach() {
     else
         status "$1: dirty"
         echo "$statusResult"
+    fi
+
+    if [[ -n "$desiredBranch" ]]; then
+        actualBranch="$(cd "$path"; git branch | grep "^\\* " | cut -d " " -f 2-)"
+
+        if [[ "$actualBranch" != "$desiredBranch" ]]; then
+            echo "On branch '$actualBranch' instead of '$desiredBranch'"
+        fi
     fi
 }

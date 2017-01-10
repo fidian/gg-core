@@ -27,9 +27,10 @@ cmdSync() {
 # that should skip all future work).  Otherwise this returns
 # cmdSyncSynchronize return codes.
 cmdSyncEach() {
-    local path remote
+    local cmd branch path remote
 
     path="$(getProjectConfig "$1" path)"
+    branch="$(getProjectConfig "$1" branch)"
 
     if [[ -z "$path" ]]; then
         status "No path set for $1"
@@ -46,8 +47,19 @@ cmdSyncEach() {
             return 0
         fi
 
-        status "Cloning $1 into $path"
-        git clone "$remote" "$path"
+        cmd=(git clone)
+
+        if [[ -z "$branch" ]]; then
+            status "Cloning $1 into $path"
+        else
+            status "Cloning $1 into $path (branch $branch)"
+            cmd[${#cmd[@]}]=--branch
+            cmd[${#cmd[@]}]=$branch
+        fi
+
+        cmd[${#cmd[@]}]=$remote
+        cmd[${#cmd[@]}]=$path
+        "${cmd[@]}"
         cmdSyncSynchronize "$path"
 
         return 0
