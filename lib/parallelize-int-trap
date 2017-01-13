@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# SIGINT trap handler for parallelized operations.  Stop running jobs and
+# send SIGINT to all children.
+#
+# Returns nothing.  Will resend SIGINT to current process after restoring
+# the previous SIGINT trap.
+parallelizeIntTrap() {
+    local pid
+
+    # Erase job list
+    parallelizeJobs=()
+    export parallelizeJobs
+
+    # Send signal to all children.  Don't redeclare the pids variable
+    # shellcheck disable=SC2154
+    if [[ "${#parallelizeJobPids[@]}" -gt 0 ]]; then
+        for pid in "${parallelizeJobPids[@]}"; do
+            kill -SIGINT "$pid" > /dev/null 2>&1
+        done
+    fi
+
+    # Restore the trap and reissue the SIGINT.
+    #
+    # We want this to expand now instead of when signalled.  Also, this
+    # must set the trap to "-" if there was no previous trap.
+    # shellcheck disable=SC2064
+    trap "${parallelizeOldIntTrap:--}" SIGINT
+    kill -SIGINT $$
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Starts jobs from the parallelizeJobs array (removing them once started)
+# and adds the pids to parallelizeJobPids array.  Once the number of jobs
+# running matches parallelizeProcessMax, no more jobs will be added.
+#
+# Returns nothing.
+parallelizeRunJobs() {
+    local job
+
+    # Don't redeclare variables so we can keep their data around
+    # shellcheck disable=SC2154
+    while [[ "${#parallelizeJobs[@]}" -gt 0 && "${#parallelizeJobPids[@]}" -lt "$parallelizeProcessMax" ]]; do
+        # Shift off the first job.
+        job="${parallelizeJobs[0]}"
+        parallelizeJobs=("${parallelizeJobs[@]:1}")
+
+        # Start the job in a subshell so it is unable to affect the current
+        # shell.
+        (
+            eval "$job"
+        ) &
+        
+        # Save the pid.
+        parallelizeJobPids[${#parallelizeJobPids[@]}]=$!
+    done
+}

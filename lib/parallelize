@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Parallelize a list of jobs.
+#
+# $* - All jobs that should be executed at the same time.
+#
+# Returns true (0) if there were zero failures.  Returns the number of
+# failing jobs if that number is less than 254.  Returns 254 if there were
+# over 253 failures.
+parallelize() {
+    local alive failures parallelizeJobPids parallelizeJobs parallelizeOldIntTrap parallelizeProcessMax pid result triggerCheck
+
+    # Detect if "wait -n" is supported.
+    result=$(set +eE; wait -n > /dev/null 2>&1; echo $?)
+
+    if [[ "$result" -eq 127 ]]; then
+        triggerCheck="wait -n"
+    else
+        triggerCheck="sleep 1"
+    fi
+
+    # Detect number of processors
+    if [[ -f /proc/cpuinfo ]]; then
+        parallelizeProcessMax=$(grep -c "^processor"$'\t': /proc/cpuinfo)
+    else
+        parallelizeProcessMax=$(sysctl -n hw.ncpu)
+    fi
+
+    # Run at least one job at a time
+    if [[ "$parallelizeProcessMax" -lt 1 ]]; then
+        parallelizeProcessMax=1
+    fi
+
+    parallelizeJobs=("$@")
+    parallelizeJobPids=()
+    failures=0
+    parallelizeOldIntTrap="$(trap - SIGINT)"
+    trap parallelizeIntTrap SIGINT
+    export parallelizeJobs parallelizeJobPids parallelizeOldIntTrap parallelizeProcessMax
+    parallelizeRunJobs
+
+    while [[ "${#parallelizeJobPids[@]}" -gt 0 ]]; do
+        eval "$triggerCheck"
+        alive=()
+
+        for pid in "${parallelizeJobPids[@]}"; do
+            if kill -0 "$pid" > /dev/null 2>&1; then
+                alive[${#alive[@]}]=$pid
+            elif ! wait "$pid"; then
+                failures=$((failures + 1))
+            fi
+        done
+
+        if [[ "${#alive[@]}" -gt 0 ]]; then
+            parallelizeJobPids=("${alive[@]}")
+        else
+            parallelizeJobPids=()
+        fi
+
+        parallelizeRunJobs
+    done
+
+    # We want this to expand now instead of when signalled.  Also, this
+    # must set the trap to "-" if there was no previous trap.
+    # shellcheck disable=SC2064
+    trap "${parallelizeOldIntTrap:--}" SIGINT
+
+    if [[ "$failures" -lt 254 ]]; then
+        return "$failures"
+    fi
+
+    return 254
+}

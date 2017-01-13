@@ -3,18 +3,29 @@
 #
 # $1 - The command to call.
 #
-# The command is called with the path and source url, as in
+# The command is called with the project name, as in
 #
-#   theCommandToCall "some/path" "git@github.com:some/url"
+#   theCommandToCall "my-project"
 #
-# Stops at the first error and returns the error code.  When no errors are
-# encountered, this returns 0.
+# The command itself may determine the path and other factors based on the
+# project name.
+#
+# Returns the number of commands that failed.  When there are no errors, this
+# returns 0.
 projectForEach() {
-    local path pathVarName project remote remoteVarName
+    local jobs project
 
+    jobs=()
+
+    # Do not redeclare gg_manifest
+    # shellcheck disable=SC2154
     for project in "${gg_manifest[@]}"; do
         if [[ "$project" != "default" ]]; then
-            "$1" "$project"
+            jobs[${#jobs[@]}]="echo \"\$(\"$1\" \"$project\" 2>&1)\""
         fi
     done
+
+    if [[ "${#jobs[@]}" -gt 0 ]]; then
+        parallelize "${jobs[@]}"
+    fi
 }
