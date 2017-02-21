@@ -12,7 +12,11 @@ parallelizeRunJobs() {
     while [[ "${#parallelizeJobs[@]}" -gt 0 && "${#parallelizeJobPids[@]}" -lt "$parallelizeProcessMax" ]]; do
         # Shift off the first job.
         job="${parallelizeJobs[0]}"
-        parallelizeJobs=("${parallelizeJobs[@]:1}")
+
+        # This requires IFS to either contain a space or be unset. There's
+        # bug in bash prior to 4.0-rc1 that would convert the array into
+        # a single string.
+        IFS= parallelizeJobs=("${parallelizeJobs[@]:1}")
 
         # Start the job in a subshell so it is unable to affect the current
         # shell.
