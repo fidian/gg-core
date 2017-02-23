@@ -5,7 +5,7 @@
 #
 # Returns nothing.
 parallelizeRunJobs() {
-    local job
+    local job oldIfs
 
     # Don't redeclare variables so we can keep their data around
     # shellcheck disable=SC2154
@@ -16,7 +16,10 @@ parallelizeRunJobs() {
         # This requires IFS to either contain a space or be unset. There's
         # bug in bash prior to 4.0-rc1 that would convert the array into
         # a single string.
-        IFS= parallelizeJobs=("${parallelizeJobs[@]:1}")
+        oldIfs=$IFS
+        IFS=
+        parallelizeJobs=("${parallelizeJobs[@]:1}")
+        IFS=$oldIfs
 
         # Start the job in a subshell so it is unable to affect the current
         # shell.
