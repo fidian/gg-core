@@ -18,18 +18,7 @@ parallelize() {
         triggerCheck="sleep 1"
     fi
 
-    # Detect number of processors
-    if [[ -f /proc/cpuinfo ]]; then
-        parallelizeProcessMax=$(grep -c "^processor"$'\t': /proc/cpuinfo)
-    else
-        parallelizeProcessMax=$(sysctl -n hw.ncpu)
-    fi
-
-    # Run at least one job at a time
-    if [[ "$parallelizeProcessMax" -lt 1 ]]; then
-        parallelizeProcessMax=1
-    fi
-
+    parallelizeProcessMax=$(parallelizeGetLimit)
     parallelizeJobs=("$@")
     parallelizeJobPids=()
     failures=0

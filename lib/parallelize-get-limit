@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Determines the number of parallel jobs that should be executed.
+#
+# Highest priority is listed first:
+#
+# * PARALLEL_JOBS environment variable.
+# * parallel.jobs configuration setting.
+# * Number of CPU processors.
+# * Default of 1.
+#
+# Returns nothing.
+parallelizeGetLimit() {
+    local maxJobs
+
+    maxJobs="auto"
+
+    # Use the config setting.
+    maxJobs=$(getConfig "parallel.jobs" "${maxJobs}")
+
+    # Override with an environment variable.
+    maxJobs=${PARALLEL_JOBS-$maxJobs}
+
+    if [[ "$maxJobs" == "auto" ]]; then
+        # Detect number of processors.
+        if [[ -f /proc/cpuinfo ]]; then
+            maxJobs=$(grep -c "^processor"$'\t': /proc/cpuinfo)
+        else
+            maxJobs=$(sysctl -n hw.ncpu)
+        fi
+    fi
+
+    # Run at least one job at a time.
+    if [[ "$maxJobs" -lt 1 ]]; then
+        maxJobs=1
+    fi
+
+    echo "$maxJobs"
+}
