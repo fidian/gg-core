@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Load the manifest file by sourcing it.
+# Load the manifest file by sourcing it. Also loads configuration from
+# a home directory and the project's folder.
+#
+# Configuration is loaded from ~/.ggconfig and .gg/config in the project's
+# folder. Global configuration is overridden by project-specific config.
 #
 # Returns 1 when there is no file, otherwise returns the return code generated
 # by the manifest script.
 manifestLoad() {
-    local manifest
+    local config file manifest
 
-    manifest="$metaDir/manifest/manifest.ini"
+    config=""
+    manifest="${metaDir-}/manifest/manifest.ini"
 
     if [[ ! -f "$manifest" ]]; then
         cat <<EOF
@@ -17,6 +22,13 @@ EOF
         return 1
     fi
 
+    for file in ~/.ggconfig "${metaDir-}/config"; do
+        if [[ -f "$file" ]]; then
+            config="${config}"$'\n'"$(cat "$file")"
+        fi
+    done
+
+    ini-parse gg_config "$config"
     ini-parse "gg_manifest" "[.gg/gg-core]
 path=.gg/gg-core
 

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Gets a configuration setting.
+#
+# $1 - Configuration name.
+# $2 - Default value
+getConfig() {
+    local default name
+
+    name=$(ini-key-name "gg_config" "" "$1")
+    default=${2-}
+    echo "${!name-$default}"
+}
