@@ -14,7 +14,7 @@ encode-string() {
 
     while [[ "${#IN}" -gt 0 ]]; do
         C=${IN:0:1}
-        printf -v C "%x" "'$C"
+        printf -v C "%02x" "'$C"
         OUT="$OUT$C"
         IN="${IN:1}"
     done
