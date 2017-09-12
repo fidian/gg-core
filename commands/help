@@ -4,6 +4,6 @@ commandAdd help cmdHelp
 
 cmdHelpHelp() {
     cat <<EOF
-   help            Displays this help message.
+   help               Displays this help message.
 EOF
 }

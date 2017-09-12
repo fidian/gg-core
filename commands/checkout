@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+commandAdd checkout cmdCheckout
+
+cmdCheckoutHelp() {
+    cat <<EOF
+   checkout [BRANCH]  Checks out the specified branch. If the branch does not
+                      exist, git errors. If no branch is specified, the default
+                      branch for the repository is checked out.
+EOF
+}
+
+
+# Check out a specified branch or the repository's default branch.
+#
+# $1 - Branch name, optional.
+cmdCheckout() {
+    projectForEach cmdCheckoutEach "${1-}"
+}
+
+
+# Called for each project.
+#
+# $1 - Branch name or empty string, indicating to use the default branch.
+# $2 - Project identifier.
+#
+# Returns true for success. Returns true when the following soft errors
+# happen: the project has no path, the project folder doesn't exist, the
+# project isn't checked out, when the repository does not have the
+# necessary branch, there was no branch specified and the default is empty.
+cmdCheckoutEach() {
+    local currentBranch currentRef branch path project
+
+    currentBranch=
+    branch="$1"
+    project="$2"
+    path="$(getProjectConfig "$project" path)"
+
+    if [[ -z "$1" ]]; then
+        branch="$(getProjectConfig "$project" branch)"
+    fi
+
+    if [[ -z "$branch" ]]; then
+        status "No default branch for $project"
+
+        return 0
+    fi
+
+    if [[ -z "$path" ]]; then
+        status "No path set for $project"
+
+        return 0
+    fi
+
+    if [[ ! -d "$path" ]]; then
+        status "$project not checked out: $path"
+
+        return 0
+    fi
+
+    (
+        cd "$path"
+        currentRef="$(git rev-parse --short HEAD 2> /dev/null)"
+
+        if [[ -z "$currentRef" ]]; then
+            status "$project not on a commit: $path"
+
+            return 0
+        fi
+
+        currentBranch="$(git symbolic-ref HEAD 2> /dev/null)"
+            
+        if [[ -n "$currentBranch" ]]; then
+            currentRef=${currentBranch#refs/heads/}
+        fi
+
+        if [[ "$currentRef" == "$branch" ]]; then
+            status "Already on branch '$branch'"
+        else
+            status "Switching from '$currentRef' to '$branch'"
+            git checkout "$branch"
+        fi
+    )
+}

@@ -13,15 +13,16 @@
 # Returns the number of commands that failed.  When there are no errors, this
 # returns 0.
 projectForEach() {
-    local jobs project
+    local cmd jobs project
 
     jobs=()
+    printf -v cmd "%q " "$@"
 
     # Do not redeclare gg_manifest
     # shellcheck disable=SC2154
     for project in "${gg_manifest[@]}"; do
         if [[ "$project" != "default" ]]; then
-            jobs[${#jobs[@]}]="echo \"\$(\"$1\" \"$project\" 2>&1)\""
+            jobs[${#jobs[@]}]="echo \"\$($cmd \"$project\" 2>&1)\""
         fi
     done
 

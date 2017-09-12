@@ -4,7 +4,7 @@ commandAdd status cmdStatus
 
 cmdStatusHelp() {
     cat <<EOF
-   status          Displays each repository's status. 
+   status             Displays each repository's status. 
 EOF
 }
 

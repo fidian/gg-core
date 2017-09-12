@@ -4,8 +4,8 @@ commandAdd init cmdInit
 
 cmdInitHelp() {
     cat <<EOF
-   init URL        Initalize a group of repositories.  The URL is the
-                   location of a git repository.  You are currently in an
-                   initalized repository.
+   init URL           Initalize a group of repositories.  The URL is the
+                      location of a git repository.  You are currently in an
+                      initalized repository.
 EOF
 }

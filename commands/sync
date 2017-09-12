@@ -4,8 +4,8 @@ commandAdd sync cmdSync
 
 cmdSyncHelp() {
     cat <<EOF
-   sync            Synchronize local repositories with remotes.  This
-                   attempts to rebase and falls back to pull/push.
+   sync               Synchronize local repositories with remotes.  This
+                      attempts to rebase and falls back to pull/push.
 EOF
 }
 
