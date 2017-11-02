@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+commandAdd pull cmdPull
+
+cmdPullHelp() {
+    cat <<EOF
+   pull               Pull remote changes into current repositories.
+EOF
+}
+
+
+# Pull in changes for all projects
+cmdPull() {
+    projectForEach cmdPullEach
+}
+
+
+# Called for each project that should have changes pulled.
+#
+# If the folder does not exist, this will clone instead of pulling.
+#
+# $1 - Project identifier.
+#
+# Returns true on success, no path, or no remote (none of those are errors
+# that should skip all future work).  Otherwise this returns git's return
+# code.
+cmdPullEach() {
+    local cmd branch path remote
+
+    path="$(getProjectConfig "$1" path)"
+
+    if [[ -z "$path" ]]; then
+        status "No path set for $1"
+
+        return 0
+    fi
+
+    if [[ ! -d "$path" ]]; then
+        branch="$(getProjectConfig "$1" branch)"
+        remote="$(getProjectConfig "$1" remote)"
+
+        if [[ -z "$remote" ]]; then
+            status "No remote set for $1"
+
+            return 0
+        fi
+
+        cmd=(git clone)
+
+        if [[ -z "$branch" ]]; then
+            status "Cloning $1 into $path"
+        else
+            status "Cloning $1 into $path (branch $branch)"
+            cmd[${#cmd[@]}]=--branch
+            cmd[${#cmd[@]}]=$branch
+        fi
+
+        cmd[${#cmd[@]}]=$remote
+        cmd[${#cmd[@]}]=$path
+        "${cmd[@]}"
+
+        return 0
+    fi
+
+    status "Pulling $1"
+    (
+        cd "$path"
+        git pull
+    )
+}
