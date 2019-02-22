@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Gets config values for a project. Defaults to the "default" list if there is
+# no setting.
+#
+# $1 - Project name.
+# $2 - Config key.
+#
+# Writes out the value to stdout.
 getProjectConfig() {
     local name
 

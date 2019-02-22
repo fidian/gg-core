@@ -21,7 +21,7 @@ projectForEach() {
     # Do not redeclare gg_manifest
     # shellcheck disable=SC2154
     for project in "${gg_manifest[@]}"; do
-        if [[ "$project" != "default" ]]; then
+        if projectFilter "$project"; then
             jobs[${#jobs[@]}]="echo \"\$($cmd \"$project\" 2>&1)\""
         fi
     done

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Determines if we should run a command for a project or if it is filtered out.
+#
+# $1 - The project name
+#
+# Returns 0 (success) when we should run the command, any other value otherwise.
+projectFilter() {
+    local filterTags match tag tags
+
+    # Exclude the default section in the INI file, which is the catch-all for
+    # general config settings.
+    if [[ "$1" == "default" ]]; then
+        return 1
+    fi
+
+    filterTags=$(getConfig filter.tags '')
+    filterTags=${GG_FILTER_TAGS-$filterTags}
+
+    # Exclude projects that don't have the necessary tags
+    if [[ -n "$filterTags" ]]; then
+        # Get the list of tags and split into an array
+        tags=$(getProjectConfig "$1" tags)
+        IFS=" " read -r -a tags <<< "${tags//,/ }"
+        match=false
+        filterTags=" ${filterTags//,/ } "
+
+        if [[ "${#tags[@]}" -gt 0 ]]; then
+            for tag in "${tags[@]}"; do
+                if [[ "$filterTags" == *" $tag "* ]]; then
+                    match=true
+                fi
+            done
+        fi
+
+        if ! $match; then
+            return 2
+        fi
+    fi
+
+    return 0
+}
