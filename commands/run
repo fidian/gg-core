@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+commandAdd run cmdRun
+
+cmdRunHelp() {
+    cat <<EOF
+   run <command> [args]                                      
+                      Executes a command in each repository.
+EOF
+}
+
+
+# Synchronize projects
+cmdRun() {
+    local quoted
+    printf -v quoted "%q " "$@"
+
+    if [[ -z "$quoted" ]]; then
+        status "Need the command to run"
+    else
+        eval "cmdRunEach() { cmdRunEachSetup \"\$1\" && $quoted; }"
+        projectForEach cmdRunEach
+    fi
+}
+
+
+# Helper to do most of the work of cmdRunEach
+#
+# $1 - Project identifier.
+#
+# Returns nothing useful.
+cmdRunEachSetup() {
+    local path
+
+    path="$(getProjectConfig "$1" path)"
+
+    if [[ -z "$path" ]]; then
+        status "No path set for $1"
+
+        return 1
+    fi
+
+    cd "$path" || {
+        status "Project not checked out: $1"
+        return 1
+    }
+
+    status "Running in $1"
+}
