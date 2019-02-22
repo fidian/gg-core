@@ -1,6 +1,11 @@
 #!/bin/bash
 #
 # TEMPORARY FIX UNTIL LIBRARIES CAN BE USED FROM THIRD PARTY REPOSITORIES
+# If gg switches to use bpm libraries, the behavior changes. That INI parsing
+# library will preserve all values that are found in the INI file. This one
+# will overwrite. Also, that one uses case-insensitive sections and keys. These
+# changes would affect status messages, repository names, overwriting .ggconfig
+# values and more. Thorough testing will need to be done.
 
 # Hex encodes a string and writes it to stdout.
 #
