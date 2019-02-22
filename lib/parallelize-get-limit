@@ -18,7 +18,7 @@ parallelizeGetLimit() {
     maxJobs=$(getConfig "parallel.jobs" "${maxJobs}")
 
     # Override with an environment variable.
-    maxJobs=${PARALLEL_JOBS-$maxJobs}
+    maxJobs=${GG_PARALLEL_JOBS-$maxJobs}
 
     if [[ "$maxJobs" == "auto" ]]; then
         # Detect number of processors.

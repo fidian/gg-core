@@ -14,7 +14,7 @@ The following lists all of the config settings that are used by `gg`.
 `parallel.jobs`
 ---------------
 
-* Environment: `PARALLEL_JOBS`
+* Environment: `GG_PARALLEL_JOBS`
 * Config file: `parallel.jobs`
 * Default: 1 per processor.
 * Restrictions: Minimum of 1.
